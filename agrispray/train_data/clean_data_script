@@ -25,8 +25,8 @@ for col in df.columns:
 # print the first row of the cleaned dataframe so that i can see all the columns and their values
 #print(df.iloc[0])
 
-# from the Date/Time column remove the dashes 
-df['Date/Time (LST)'] = df['Date/Time (LST)'].str.replace('-', '')
+# drop the date/time column
+df = df.drop(columns = ["Year", "Longitude (x)", "Latitude (y)","Station Name", "Climate ID", "Year", "Month", "Day", "Time (LST)"])
 
 
 print(df.iloc[0])
