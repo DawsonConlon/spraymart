@@ -26,7 +26,7 @@ for col in df.columns:
 #print(df.iloc[0])
 
 # drop the date/time column
-df = df.drop(columns = ["Year", "Longitude (x)", "Latitude (y)","Station Name", "Climate ID", "Year", "Month", "Day", "Time (LST)"])
+df = df.drop(columns = ["Year", "Longitude (x)", "Latitude (y)","Station Name", "Climate ID", "Year", "Month", "Day", "Time (LST)", "Date/Time (LST)"])
 
 
 print(df.iloc[0])
@@ -34,5 +34,5 @@ print(df.iloc[0])
 
 
 # save the cleaned data frame to a new csv file
-df.to_csv('final_clean_weather_data.csv', index=False)
+df.to_csv('clean_weather_data.csv', index=False)
 
