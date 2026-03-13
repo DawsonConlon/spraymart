@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     # Environment Canada API
     ECCC_BASE_URL: str = "https://api.weather.gc.ca"
 
+    # Open-Meteo historical weather API (ERA5 archive)
+    OPEN_METEO_BASE_URL: str = "https://archive-api.open-meteo.com/v1/era5"
+
     # John Deere Operations Center API
     JOHN_DEERE_CLIENT_ID: str = ""
     JOHN_DEERE_CLIENT_SECRET: str = ""

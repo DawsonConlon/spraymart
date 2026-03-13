@@ -61,6 +61,39 @@ class WeatherClient:
 
         return sorted(records, key=lambda r: r["date"])
 
+    async def get_open_meteo_historical(
+        self,
+        latitude: float,
+        longitude: float,
+        start_date: date,
+        end_date: Optional[date] = None,
+        hourly: str = "temperature_2m,relative_humidity_2m,dew_point_2m,rain,wind_speed_10m,wind_direction_10m,wind_gusts_10m,soil_temperature_7_to_28cm,soil_moisture_7_to_28cm",
+        daily: str = "temperature_2m_min",
+        timezone: str = "UTC",
+    ) -> dict:
+        """Fetch historical weather data from Open-Meteo (ERA5 archive).
+
+        This mirrors the API documented at:
+        https://open-meteo.com/en/docs/historical-weather-api
+        """
+        end_date = end_date or start_date
+
+        url = settings.OPEN_METEO_BASE_URL
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "hourly": hourly,
+            "daily": daily,
+            "timezone": timezone,
+        }
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            return resp.json()
+
     async def get_current_conditions(
         self,
         latitude: float,
