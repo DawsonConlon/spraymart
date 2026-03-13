@@ -1,0 +1,37 @@
+import pandas as pd 
+
+df = pd.read_csv('/Users/dawsonconlon/Desktop/agtech/aghackathon/agrispray/train_data/weather_train_data.csv')
+print(df)
+
+
+# Drop columns with more than 50% missing values
+df = df.dropna(axis=1, thresh=len(df) * 0.5)
+
+print(df.columns)
+
+# see if columns have missing values
+missing_values = df.isnull().sum()
+print(missing_values)
+
+# fill missing values with mean
+for col in df.columns:
+    if df[col].dtype in ['float64', 'int64']:
+        df[col] = df[col].fillna(df[col].mean())
+    else:
+        df[col] = df[col].fillna(df[col].mode()[0])
+        
+
+
+# print the first row of the cleaned dataframe so that i can see all the columns and their values
+#print(df.iloc[0])
+
+# from the Date/Time column remove the dashes 
+df['Date/Time (LST)'] = df['Date/Time (LST)'].str.replace('-', '')
+
+
+print(df.iloc[0])
+
+
+
+# save the cleaned data frame to a new csv file
+df.to_csv('clean_weather_data.csv', index=False)
