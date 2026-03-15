@@ -1,0 +1,12 @@
+# Ignore python server artifacts
+__pycache__/
+*.pyc
+
+# Node modules (if added later)
+node_modules/
+
+# Git
+.git
+
+# OS
+.DS_Store
