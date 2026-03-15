@@ -1,10 +1,9 @@
 import joblib
 import pandas as pd
 
-# load the trained model
-model = joblib.load("../models/spray_model.pkl")
+model = joblib.load("models/spray_model.pkl")
 
-def predict_spray(weather):
+def predict_spray(weather, growth_stage):
 
     temp = weather["temperature"]
     humidity = weather["humidity"]
@@ -21,15 +20,15 @@ def predict_spray(weather):
         "wind_speed": wind_speed,
         "precipitation": precipitation,
         "pressure": pressure,
-        "vpd": vpd
+        "vpd": vpd,
+        "growth_stage": growth_stage
     }])
 
     prediction = model.predict(features)[0]
 
     return "SPRAY" if prediction == 1 else "DO NOT SPRAY"
 
-
-if __name__ == "__main__":
+'''if __name__ == "__main__":
 
     weather = {
         "temperature": 15.6,
@@ -40,6 +39,8 @@ if __name__ == "__main__":
         "pressure": 92.42
     }
 
-    result = predict_spray(weather)
+    growth_stage = 3
 
-    print("Prediction:", result)
+    result = predict_spray(weather, growth_stage)
+
+    print("Prediction:", result)'''
