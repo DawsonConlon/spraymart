@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SpraySmart</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <h1>Spray<span class="highlight">Smart</span></h1>
+        <p class="location" id="locationLabel"><span class="location-dot"></span>SASKATOON, SK</p>
+        <form class="location-bar" id="locationForm">
+          <input
+            type="text"
+            id="locationInput"
+            name="location"
+            placeholder="Search location"
+            value="Saskatoon, SK"
+            autocomplete="off"
+          />
+          <button type="submit" id="locationSubmit">Update</button>
+        </form>
+        <p class="location-feedback" id="locationFeedback"></p>
+      </div>
+      <div class="meta">
+        <p class="subtitle">7-Day Spray Forecast</p>
+        <p class="updated" id="updatedText">Updated just now • Open-Meteo</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="forecast-summary">
+      <div class="summary-pill" id="summaryBadge"></div>
+    </section>
+
+    <section class="forecast">
+      <div class="week-label">THIS WEEK</div>
+      <div class="forecast-row" id="forecastRow"></div>
+
+      <div class="forecast-detail" id="forecastDetail">
+        <div class="detail-header">
+          <div>
+            <h2 id="detailDate">—</h2>
+            <p id="detailSubtitle">Select a day to see details.</p>
+          </div>
+          <div class="detail-badge" id="detailBadge">—</div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-card" data-metric="wind">
+            <div class="detail-title">WIND</div>
+            <div class="detail-value" id="detailWind">—</div>
+          </div>
+          <div class="detail-card" data-metric="temp">
+            <div class="detail-title">TEMPERATURE</div>
+            <div class="detail-value" id="detailTemp">—</div>
+          </div>
+          <div class="detail-card" data-metric="humidity">
+            <div class="detail-title">HUMIDITY</div>
+            <div class="detail-value" id="detailHumidity">—</div>
+          </div>
+          <div class="detail-card" data-metric="precip">
+            <div class="detail-title">PRECIPITATION</div>
+            <div class="detail-value" id="detailPrecip">—</div>
+          </div>
+          <div class="detail-card" data-metric="dew">
+            <div class="detail-title">DEW POINT GAP</div>
+            <div class="detail-value" id="detailDew">—</div>
+          </div>
+          <div class="detail-card" data-metric="pressure">
+            <div class="detail-title">PRESSURE TREND</div>
+            <div class="detail-value" id="detailPressure">—</div>
+          </div>
+          <div class="detail-card" data-metric="gdd">
+            <div class="detail-title">GDD STAGE</div>
+            <div class="detail-value" id="detailGdd">—</div>
+          </div>
+        </div>
+
+        <div class="hourly-chart">
+          <div class="chart-title" id="chartMetricTitle">Hourly <span>Wind</span></div>
+          <div class="chart-overall" id="chartOverall">Overall suggestion: Good window for spraying.</div>
+          <div class="chart-grid" id="hourlyChart"></div>
+          <div class="chart-labels" id="chartLabels"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="app-footer">
+      <p>Help improve prediction for Saskatchewan farmers</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
