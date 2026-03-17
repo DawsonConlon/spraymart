@@ -3,7 +3,7 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-import requests
+from api.weather_fetch import get_hourly_weather
 
 
 def _safe_float(value, default):
@@ -18,28 +18,6 @@ def _safe_int(value, default):
         return int(value)
     except (TypeError, ValueError):
         return default
-
-
-def fetch_open_meteo_forecast(lat: float, lon: float, days: int = 7):
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": lat,
-        "longitude": lon,
-        "hourly": [
-            "temperature_2m",
-            "relative_humidity_2m",
-            "wind_speed_10m",
-            "precipitation",
-            "surface_pressure",
-            "dew_point_2m",
-        ],
-        "forecast_days": days,
-        "timezone": "auto",
-    }
-
-    response = requests.get(url, params=params, timeout=20)
-    response.raise_for_status()
-    return response.json()
 
 
 def evaluate_status(day):
@@ -108,27 +86,38 @@ def evaluate_status(day):
     if checks["gdd"] == "iffy":
         reasons.append("Growth stage is near threshold")
 
-    status = "bad" if "bad" in checks.values() else "iffy" if "iffy" in checks.values() else "good"
+    values = list(checks.values())
+    good_count = values.count("good")
+    iffy_count = values.count("iffy")
+    bad_count = values.count("bad")
+
+    # Majority-based day status: whichever category has the most metrics wins.
+    # This ensures a day can still be green if only one metric is borderline.
+    if good_count >= iffy_count and good_count >= bad_count:
+        status = "good"
+    elif bad_count > good_count and bad_count >= iffy_count:
+        status = "bad"
+    else:
+        status = "iffy"
+
     return status, reasons
 
 
-def build_daily_forecast(raw, growth_stage=3):
-    hourly = raw["hourly"]
-    times = hourly["time"]
+def build_daily_forecast(hours, growth_stage=3):
 
     grouped = {}
-    for i, iso_time in enumerate(times):
-        dt = datetime.fromisoformat(iso_time)
+    for entry in hours:
+        dt = datetime.fromisoformat(entry["time"])
         day_key = dt.date().isoformat()
         grouped.setdefault(day_key, []).append(
             {
                 "time": dt,
-                "temperature": hourly["temperature_2m"][i],
-                "humidity": hourly["relative_humidity_2m"][i],
-                "wind": hourly["wind_speed_10m"][i],
-                "precip": hourly["precipitation"][i],
-                "pressure": hourly["surface_pressure"][i],
-                "dew": hourly["dew_point_2m"][i],
+                "temperature": entry["temperature"],
+                "humidity": entry["humidity"],
+                "wind": entry["wind_speed"],
+                "precip": entry["precipitation"],
+                "pressure": entry["pressure"],
+                "dew": entry["dew_point"],
             }
         )
 
@@ -136,14 +125,17 @@ def build_daily_forecast(raw, growth_stage=3):
     for day_key in sorted(grouped.keys())[:7]:
         entries = grouped[day_key]
 
-        # Use daytime window when possible for practical spray checks.
-        daytime = [e for e in entries if 6 <= e["time"].hour <= 18] or entries
+        # Focus the spray window on the practical morning period: 5 am through 2 pm.
+        spray_window = [e for e in entries if 5 <= e["time"].hour <= 14] or entries
 
-        avg_temp = sum(e["temperature"] for e in daytime) / len(daytime)
-        avg_humidity = sum(e["humidity"] for e in daytime) / len(daytime)
-        avg_wind = sum(e["wind"] for e in daytime) / len(daytime)
-        total_precip = sum(e["precip"] for e in daytime)
-        avg_dew_gap = sum((e["temperature"] - e["dew"]) for e in daytime) / len(daytime)
+        # Chart only the same 5 am through 2 pm spray window.
+        all_day = [e for e in sorted(entries, key=lambda x: x["time"]) if 5 <= e["time"].hour <= 14] or sorted(entries, key=lambda x: x["time"])
+
+        avg_temp = sum(e["temperature"] for e in spray_window) / len(spray_window)
+        avg_humidity = sum(e["humidity"] for e in spray_window) / len(spray_window)
+        avg_wind = sum(e["wind"] for e in spray_window) / len(spray_window)
+        total_precip = sum(e["precip"] for e in spray_window)
+        avg_dew_gap = sum((e["temperature"] - e["dew"]) for e in spray_window) / len(spray_window)
 
         pressure_by_hour = sorted(entries, key=lambda x: x["time"])
         p_start = pressure_by_hour[0]["pressure"]
@@ -162,13 +154,14 @@ def build_daily_forecast(raw, growth_stage=3):
             "pressureTrend": round(pressure_trend, 1),
             "gddStage": gdd_stage,
             "hourly": {
-                "wind": [round(e["wind"], 1) for e in entries[:8]],
-                "temp": [round(e["temperature"], 1) for e in entries[:8]],
-                "humidity": [round(e["humidity"], 0) for e in entries[:8]],
-                "precip": [round(e["precip"], 1) for e in entries[:8]],
-                "dew": [round(e["temperature"] - e["dew"], 1) for e in entries[:8]],
-                "pressure": [round(e["pressure"], 1) for e in entries[:8]],
-                "gdd": [gdd_stage for _ in range(min(8, len(entries)))],
+                "timeLabels": [e["time"].strftime("%H:%M") for e in all_day],
+                "wind": [round(e["wind"], 1) for e in all_day],
+                "temp": [round(e["temperature"], 1) for e in all_day],
+                "humidity": [round(e["humidity"], 0) for e in all_day],
+                "precip": [round(e["precip"], 1) for e in all_day],
+                "dew": [round(e["temperature"] - e["dew"], 1) for e in all_day],
+                "pressure": [round(e["pressure"], 1) for e in all_day],
+                "gdd": [gdd_stage for _ in all_day],
             },
         }
 
@@ -206,10 +199,12 @@ class ForecastHandler(BaseHTTPRequestHandler):
         lat = _safe_float(params.get("lat", [52.13])[0], 52.13)
         lon = _safe_float(params.get("lon", [-106.67])[0], -106.67)
         growth_stage = _safe_int(params.get("growth_stage", [3])[0], 3)
+        start_date = params.get("start_date", ["2025-06-15"])[0]
+        end_date = params.get("end_date", ["2025-06-21"])[0]
 
         try:
-            raw = fetch_open_meteo_forecast(lat=lat, lon=lon, days=7)
-            days = build_daily_forecast(raw, growth_stage=growth_stage)
+            hours = get_hourly_weather(lat=lat, lon=lon, start_date=start_date, end_date=end_date)
+            days = build_daily_forecast(hours, growth_stage=growth_stage)
         except Exception as exc:
             self._send_json(500, {"error": str(exc)})
             return
@@ -222,7 +217,11 @@ class ForecastHandler(BaseHTTPRequestHandler):
                     "lon": lon,
                     "label": "SASKATOON, SK",
                 },
-                "source": "Open-Meteo",
+                "source": "Open-Meteo Archive",
+                "range": {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                },
                 "days": days,
             },
         )
