@@ -189,11 +189,11 @@ For the hackathon demo the app pulls **historical** weather for the week of June
 
 | Branch | What is on it |
 |---|---|
-| `dev` | The finished hackathon app (everything described above) |
-| `feature/backend` | Backend and model work before it was merged into `dev` |
+| `main` | The finished hackathon app (everything described above). This was the `dev` branch during the hackathon |
+| `feature/backend` | Backend and model work before it was merged into the finished app |
 | `feature/frontend` | First version of the dashboard |
 | `api1` | Earlier prototype: a FastAPI service ("AgriSpray") with a growing degree day engine, a spray scorer, unit tests, and the raw and cleaned training data |
-| `main` | The repo's starting commits |
+| `original-main` | The repo's starting commits from GitLab (template README and a test file) |
 
 ## Team
 
