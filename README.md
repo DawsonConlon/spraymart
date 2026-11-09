@@ -34,6 +34,30 @@ The dashboard shows a week of spray conditions for a chosen location (Saskatoon 
 - **Day detail:** click a day to see the averages for that day's spray window, a status badge, and the reasons behind it (for example "Wind is close to limit").
 - **Hourly chart:** click any measurement card to see it hour by hour from 5 am to 2 pm, with each bar coloured by whether that hour is good, borderline or bad. The app focuses on 5 am to 2 pm because morning is the most practical spraying period.
 
+### Reading the colours
+
+Everything in SprayMart uses the same three colours, so a farmer can read the week at a glance:
+
+- **Green: spray.** The weather is inside the safe range.
+- **Yellow: caution.** Conditions are getting close to a limit. Spraying may still work, but watch the weather closely.
+- **Red: do not spray.** At least one condition is outside the safe range.
+
+The colours appear at three levels: on each day card in the week strip, on each of the seven measurement cards (the small dot in the corner), and on each hour's bar in the hourly chart.
+
+*The screenshots below show the dashboard's built in sample week, which it displays when the backend is not running.*
+
+**A green day.** Sunday has light wind (8 km/h), a mild temperature, moderate humidity and no rain. All seven measurement dots are green, the badge says "Good to spray", and almost every hour in the wind chart is green.
+
+![A green day: all seven checks pass and the badge says Good to spray](docs/screenshots/good-day.png)
+
+**A yellow day.** Tuesday is hot (29 °C) and dry (30 % humidity), with wind close to the limit (13 km/h). The reasons line lists each concern, and the hourly wind chart is mostly yellow, with red at 7 am and 8 am when the wind reaches 15 to 16 km/h.
+
+![A yellow day: wind, temperature and pressure are borderline and humidity is too low](docs/screenshots/borderline-day.png)
+
+**A red day.** Thursday is too windy (16 km/h). Every other measurement is fine, but wind drift alone makes it unsafe, so the badge says "Do not spray" and most hours in the wind chart are red.
+
+![A red day: wind is too strong and the badge says Do not spray](docs/screenshots/do-not-spray-day.png)
+
 ### The seven checks
 
 Each day is scored on seven measurements, averaged over its 5 am to 2 pm window. Each one is rated good, borderline ("iffy") or bad using these thresholds (from `api/server.py`):
@@ -149,6 +173,7 @@ For the hackathon demo the app pulls **historical** weather for the week of June
 │   └── spray_model.pkl         The saved, trained model
 ├── data/raw/
 │   └── clean_weather_data.csv  Cleaned hourly weather used for training
+├── docs/screenshots/           Dashboard screenshots used in this README
 ├── utils/
 │   ├── spray_window.py         Finds hours that pass the basic spray rules
 │   └── explain.py              Turns a weather reading into plain language reasons
